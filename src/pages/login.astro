@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #e0e0e0;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            color: #666;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        input[type="email"],
+        input[type="password"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            border-color: #4a90e2;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        .toggle-auth {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .toggle-auth a {
+            color: #4a90e2;
+            text-decoration: none;
+        }
+        .toggle-auth a:hover {
+            text-decoration: underline;
+        }
+        .role-selection {
+            display: none;
+            margin-bottom: 1rem;
+        }
+        .role-option {
+            margin-bottom: 0.5rem;
+        }
+        .role-option label {
+            display: inline;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="formTitle">Iniciar sesión</h2>
+        <p id="formDescription">Ingresa tus credenciales para acceder</p>
+        <form id="authForm">
+            <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" name="email" required placeholder="tu@email.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Iniciar sesión</button>
+        </form>
+        <div class="toggle-auth">
+            <a href="#" id="toggleAuth">¿No tienes cuenta? Regístrate</a>
+        </div>
+    </div>
+
+
+    <script>
+        let isLogin = true;
+        const form = document.getElementById('authForm');
+        const toggleAuth = document.getElementById('toggleAuth');
+        const formTitle = document.getElementById('formTitle');
+        const formDescription = document.getElementById('formDescription');
+        const submitButton = form.querySelector('button[type="submit"]');
+
+        toggleAuth.addEventListener('click', (e) => {
+            e.preventDefault();
+            isLogin = !isLogin;
+            if (isLogin) {
+                formTitle.textContent = 'Iniciar sesión';
+                formDescription.textContent = 'Ingresa tus credenciales para acceder';
+                submitButton.textContent = 'Iniciar sesión';
+                toggleAuth.textContent = '¿No tienes cuenta? Regístrate';
+            } else {
+                formTitle.textContent = 'Registrar nuevo usuario';
+                formDescription.textContent = 'Crea una nueva cuenta para comenzar';
+                submitButton.textContent = 'Registrarse';
+                toggleAuth.textContent = '¿Ya tienes cuenta? Inicia sesión';
+            }
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = form.email.value;
+            const password = form.password.value;
+
+            try {
+                const response = await fetch('http://localhost:5000/login', { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const role = data.rol; // Suponiendo que la respuesta contiene un campo 'role'
+
+                    if (role === 'administrador') {
+                        window.location.href = '/vista-administrador'; // Reemplaza con la URL real de tu vista de administrador
+                    } else if (role === 'cliente') {
+                        window.location.href = '/vista-cliente'; // Reemplaza con la URL real de tu vista de cliente
+                    } else {
+                        alert('Rol desconocido');
+                    }
+                } else {
+                    alert('Error en la autenticación');
+                }
+            } catch (error) {
+                console.error('Error en la solicitud:', error);
+                alert('Hubo un problema con la solicitud');
+            }
+        });
+    </script>
+</body>
+</html>

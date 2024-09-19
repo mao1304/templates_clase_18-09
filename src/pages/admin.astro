@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Administrador</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+            margin: 0;
+        }
+        .logout-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .logout-btn:hover {
+            background-color: #c0392b;
+        }
+        .panel {
+            display: flex;
+            gap: 20px;
+        }
+        .section {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        select, button {
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #3a7bc8;
+        }
+        .notification {
+            background-color: #f8f8f8;
+            border-left: 4px solid #4a90e2;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .notification.problem {
+            border-left-color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Panel del Administrador</h1>
+            <button id="logoutBtn" class="logout-btn">Cerrar Sesión</button>
+        </header>
+        <div class="panel">
+            <div class="section">
+                <h2>Pedidos en Curso</h2>
+                <table id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>ID Pedido</th>
+                            <th>Destino</th>
+                            <th>Estado</th>
+                            <th>Domiciliario</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Los pedidos se cargarán aquí dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="section">
+                <h2>Notificaciones</h2>
+                <div id="notificationsArea">
+                    <!-- Las notificaciones se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo para pedidos y domiciliarios
+        const orders = [
+            { id: 1, destination: "Calle 123, Ciudad", status: "En preparación", courier: "" },
+            { id: 2, destination: "Avenida 456, Pueblo", status: "En camino", courier: "Juan Pérez" },
+            { id: 3, destination: "Carrera 789, Villa", status: "En preparación", courier: "" }
+        ];
+
+        const couriers = ["Juan Pérez", "María Gómez", "Carlos Rodríguez"];
+
+        // Función para cargar los pedidos en la tabla
+        function loadOrders() {
+            const tableBody = document.querySelector("#ordersTable tbody");
+            tableBody.innerHTML = "";
+            orders.forEach(order => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${order.id}</td>
+                    <td>${order.destination}</td>
+                    <td>${order.status}</td>
+                    <td>
+                        <select class="courier-select" data-order-id="${order.id}">
+                            <option value="">Seleccionar domiciliario</option>
+                            ${couriers.map(courier => `<option value="${courier}" ${courier === order.courier ? 'selected' : ''}>${courier}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <button class="assign-btn" data-order-id="${order.id}">Asignar</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Función para asignar un domiciliario a un pedido
+        function assignCourier(orderId, courier) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.courier = courier;
+                loadOrders();
+                addNotification(`Domiciliario ${courier} asignado al pedido ${orderId}`);
+            }
+        }
+
+        // Función para añadir una notificación
+        function addNotification(message, isProblem = false) {
+            const notificationsArea = document.getElementById("notificationsArea");
+            const notification = document.createElement("div");
+            notification.className = `notification ${isProblem ? 'problem' : ''}`;
+            notification.textContent = message;
+            notificationsArea.prepend(notification);
+        }
+
+        // Cargar pedidos iniciales
+        loadOrders();
+
+        // Event listeners
+        document.addEventListener("click", function(e) {
+            if (e.target.classList.contains("assign-btn")) {
+                const orderId = parseInt(e.target.getAttribute("data-order-id"));
+                const select = document.querySelector(`.courier-select[data-order-id="${orderId}"]`);
+                const courier = select.value;
+                if (courier) {
+                    assignCourier(orderId, courier);
+                } else {
+                    alert("Por favor, selecciona un domiciliario antes de asignar.");
+                }
+            }
+        });
+
+        document.getElementById("logoutBtn").addEventListener("click", function() {
+            if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+                console.log("Administrador ha cerrado sesión");
+                alert("Has cerrado sesión exitosamente.");
+                // Aquí se podría redirigir al administrador a la página de inicio de sesión
+                // window.location.href = 'login.html';
+            }
+        });
+
+        // Simulación de notificaciones
+        setTimeout(() => addNotification("Entrega completada para el pedido 2"), 3000);
+        setTimeout(() => addNotification("Problema reportado: Dirección incorrecta para el pedido 3", true), 5000);
+    </script>
+</body>
+</html>
